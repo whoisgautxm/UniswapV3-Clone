@@ -4,6 +4,7 @@ import {Tick} from "../lib/Tick.sol";
 import {Position} from "../lib/Position.sol";
 import {IERC20} from "./interfaces/IERC20.sol";
 import {IUniswapV3MintCallback} from "./interfaces/IUniswapV3MintCallback.sol";
+import "forge-std/console.sol";
 
 contract UniswapV3Pool {
     event Mint(
@@ -64,7 +65,9 @@ contract UniswapV3Pool {
         if (amount == 0) revert("UniswapV3Pool: INSUFFICIENT_LIQUIDITY_MINTED");
 
         Tick.update(ticks, lowerTick, amount);
+        
         Tick.update(ticks, uppperTick, amount);
+        
         Position.Info storage position = Position.get(
             positions,
             owner,
@@ -80,14 +83,19 @@ contract UniswapV3Pool {
         uint256 balance1Before;
         if (amount0 > 0) {
             balance0Before = balance0();
+            console.log("balance0Before: %s", balance0Before);
         }
         if (amount1 > 0) {
             balance1Before = balance1();
+            console.log("balance1Before: %s", balance1Before);
         }
+        console.log("amount0: %s", amount0);
         IUniswapV3MintCallback(msg.sender).uniswapV3MintCallback(
             amount0,
             amount1
         );
+
+        console.log("amount0: %s", amount0);
         if (amount0 > 0 && balance0Before + amount0 > balance0()) {
             revert("UniswapV3Pool: TOKEN0_INCONSISTENT");
         }
@@ -98,10 +106,10 @@ contract UniswapV3Pool {
     }
 
     function balance0() internal returns (uint256 balance) {
-        uint256 balance = IERC20(token0).balanceOf(address(this));
+         balance = IERC20(token0).balanceOf(address(this));
     }
 
     function balance1() internal returns (uint256 balance) {
-        uint256 balance = IERC20(token1).balanceOf(address(this));
+         balance = IERC20(token1).balanceOf(address(this));
     }
 }
